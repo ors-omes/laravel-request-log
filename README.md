@@ -123,7 +123,7 @@ One row per recorded request in `request_logs`:
 
 ### Large payloads are shortened, not discarded
 
-Defaults: request bodies up to **512 KB**, response bodies up to **256 KB**. Content above the limit keeps its shape:
+Defaults: request bodies up to **512 KB**, response bodies up to **256 KB**. Content within the limit is stored whole. Content above it keeps its shape:
 
 ```json
 {

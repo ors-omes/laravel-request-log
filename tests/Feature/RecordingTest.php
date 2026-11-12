@@ -161,3 +161,21 @@ it('never breaks the response when storing fails', function (): void {
 
     $this->postJson('/api/orders')->assertCreated();
 });
+
+it('stores the start time in the application time zone', function (): void {
+    $previous = date_default_timezone_get();
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+    try {
+        $before = Carbon\CarbonImmutable::now()->subSecond();
+        $this->postJson('/api/orders')->assertCreated();
+
+        $stored = LoggedRequest::query()->toBase()->value('created_at');
+
+        expect(latestRequestLog()->created_at->greaterThanOrEqualTo($before))->toBeTrue()
+            ->and(latestRequestLog()->created_at->lessThanOrEqualTo(Carbon\CarbonImmutable::now()->addSecond()))->toBeTrue()
+            ->and((string) $stored)->toStartWith($before->format('Y-m-d H'));
+    } finally {
+        date_default_timezone_set($previous);
+    }
+});

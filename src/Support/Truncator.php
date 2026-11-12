@@ -8,17 +8,18 @@ use Illuminate\Support\Facades\Config;
 use Stringable;
 
 /**
- * Shortens data instead of discarding it. Structured data stays valid JSON:
- * long strings keep their head plus "…[+N chars]", long arrays keep their
- * first items plus "…[+N items]". If the encoding is still too large the
- * limits shrink, and as a last resort the text is cut on a UTF-8 boundary
- * with a "…[truncated: kept X of Y bytes]" marker.
+ * Shortens data instead of discarding it. Content that fits the byte limit is
+ * stored whole. Otherwise structured data stays valid JSON: long strings keep
+ * their head plus "…[+N chars]", long arrays keep their first items plus
+ * "…[+N items]", and the limits shrink until it fits. As a last resort the
+ * text is cut on a UTF-8 boundary with a "…[truncated: kept X of Y bytes]"
+ * marker.
  */
 final class Truncator
 {
     private const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR;
 
-    private const SHRINK_ROUNDS = 3;
+    private const MAX_ROUNDS = 10;
 
     private readonly int $maxString;
 
@@ -45,21 +46,35 @@ final class Truncator
      */
     public function json(mixed $data, int $maxBytes): array
     {
-        $maxString = $this->maxString;
-        $maxItems = $this->maxItems;
         $truncated = false;
-        $encoded = '';
+        $encoded = self::encode($this->shape($data, PHP_INT_MAX, PHP_INT_MAX, 0, $truncated));
 
-        for ($round = 0; $round <= self::SHRINK_ROUNDS; $round++) {
+        if (strlen($encoded) <= $maxBytes) {
+            return [$encoded, $truncated];
+        }
+
+        // Start from limits that would roughly fill the budget, so as much
+        // as possible is kept, then tighten until the encoding fits.
+        [$longestList, $longestString] = $this->measure($data, 0);
+        $scale = $maxBytes / strlen($encoded);
+        $maxItems = max($this->maxItems, (int) floor($longestList * $scale * 0.9));
+        $maxString = max($this->maxString, (int) floor($longestString * $scale * 0.9));
+        $truncated = true;
+
+        for ($round = 0; $round < self::MAX_ROUNDS; $round++) {
             $encoded = self::encode($this->shape($data, $maxString, $maxItems, 0, $truncated));
 
             if (strlen($encoded) <= $maxBytes) {
                 return [$encoded, $truncated];
             }
 
-            $truncated = true;
-            $maxString = max(16, intdiv($maxString, 4));
-            $maxItems = max(1, intdiv($maxItems, 4));
+            if ($maxItems > $this->maxItems || $maxString > $this->maxString) {
+                $maxItems = max($this->maxItems, (int) floor($maxItems * 0.7));
+                $maxString = max($this->maxString, (int) floor($maxString * 0.7));
+            } else {
+                $maxString = max(16, intdiv($maxString, 4));
+                $maxItems = max(1, intdiv($maxItems, 4));
+            }
         }
 
         return [$this->text($encoded, $maxBytes), true];
@@ -80,6 +95,33 @@ final class Truncator
         $kept = mb_strcut($text, 0, $budget, 'UTF-8');
 
         return $kept.sprintf($marker, strlen($kept), $total);
+    }
+
+    /**
+     * Longest array and longest string anywhere in the data (within depth).
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function measure(mixed $value, int $depth): array
+    {
+        if (is_string($value)) {
+            return [0, strlen($value)];
+        }
+
+        if (! is_array($value) || $depth >= $this->maxDepth) {
+            return [0, 0];
+        }
+
+        $longestList = count($value);
+        $longestString = 0;
+
+        foreach ($value as $item) {
+            [$list, $string] = $this->measure($item, $depth + 1);
+            $longestList = max($longestList, $list);
+            $longestString = max($longestString, $string);
+        }
+
+        return [$longestList, $longestString];
     }
 
     private function shape(mixed $value, int $maxString, int $maxItems, int $depth, bool &$truncated): mixed

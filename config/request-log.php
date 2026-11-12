@@ -102,10 +102,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | Sizes are bytes. Bodies above "max_parse_bytes" are not decoded at all.
-    | Oversized content is shortened, never replaced: long strings keep their
-    | head plus "…[+N chars]", long arrays keep their first items plus
-    | "…[+N items]", and as a last resort the encoded text is cut on a UTF-8
-    | boundary with "…[truncated: kept X of Y bytes]".
+    | Content within the byte limit is stored whole. Oversized content is
+    | shortened, never replaced: strings longer than "max_string" keep their
+    | head plus "…[+N chars]", arrays longer than "max_items" keep their first
+    | items plus "…[+N items]" (both limits shrink until the content fits),
+    | and as a last resort the encoded text is cut on a UTF-8 boundary with
+    | "…[truncated: kept X of Y bytes]".
     |
     | Non-JSON text bodies (XML, CSV, plain text, HTML) cannot be redacted by
     | key, so only their type and size are stored unless "raw_text_bodies"
@@ -159,7 +161,8 @@ return [
             '*_otp',
             'otp_*',
             'pin',
-            'pin_code',
+            '*_pin',
+            'pin_*',
             'cvv',
             'cvc',
             '*card_number*',

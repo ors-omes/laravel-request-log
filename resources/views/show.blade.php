@@ -14,8 +14,9 @@
 
 @section('content')
     <section class="panel">
-        <h2 class="mono"><strong>{{ $entry->method }}</strong> {{ $entry->path }}
-            <span class="badge s{{ intdiv($entry->status, 100) }}">{{ $entry->status }}</span></h2>
+        <h2 class="title"><span class="mono"><strong>{{ $entry->method }}</strong> {{ $entry->path }}</span>
+            <span class="badge s{{ intdiv($entry->status, 100) }}">{{ $entry->status }}</span>
+            <span class="muted">{{ $entry->reason->value }}</span></h2>
         <dl>
             <dt>{{ __('request-log::viewer.reference') }}</dt><dd class="mono">{{ $entry->reference }}</dd>
             <dt>{{ __('request-log::viewer.time') }}</dt><dd class="mono">{{ $entry->created_at->toIso8601String() }}</dd>

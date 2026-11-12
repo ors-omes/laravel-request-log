@@ -84,7 +84,8 @@ final class RecordRequest
     private function start(Request $request): RequestState
     {
         $startedAt = $this->startTime($request);
-        $state = new RequestState(ReferenceCode::generate(), CarbonImmutable::createFromTimestampMs((int) round($startedAt * 1000)), $startedAt);
+        $startedAtTime = CarbonImmutable::createFromTimestampMs((int) round($startedAt * 1000), date_default_timezone_get());
+        $state = new RequestState(ReferenceCode::generate(), $startedAtTime, $startedAt);
         $state->routeMode = $this->decision->initialRouteMode($request);
         RequestState::attach($request, $state);
 

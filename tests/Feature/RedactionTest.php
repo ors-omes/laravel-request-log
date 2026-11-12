@@ -10,7 +10,7 @@ it('redacts sensitive keys at any depth, case-insensitively, including empty val
         'name' => 'An',
         'Password' => 'hunter2',
         'current_password' => '',
-        'profile' => ['New-Password' => 'x', 'client_secret' => 's', 'nested' => ['access_token' => null, 'otp' => '123456']],
+        'profile' => ['New-Password' => 'x', 'client_secret' => 's', 'nested' => ['access_token' => null, 'otp' => '123456', 'operator_pin' => '4821']],
         'items' => [['card_number' => '4111111111111111', 'qty' => 1]],
     ])->assertOk();
 
@@ -20,7 +20,7 @@ it('redacts sensitive keys at any depth, case-insensitively, including empty val
         'name' => 'An',
         'Password' => '[REDACTED]',
         'current_password' => '[REDACTED]',
-        'profile' => ['New-Password' => '[REDACTED]', 'client_secret' => '[REDACTED]', 'nested' => ['access_token' => '[REDACTED]', 'otp' => '[REDACTED]']],
+        'profile' => ['New-Password' => '[REDACTED]', 'client_secret' => '[REDACTED]', 'nested' => ['access_token' => '[REDACTED]', 'otp' => '[REDACTED]', 'operator_pin' => '[REDACTED]']],
         'items' => [['card_number' => '[REDACTED]', 'qty' => 1]],
     ]);
 
