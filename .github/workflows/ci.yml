@@ -29,13 +29,14 @@ jobs:
           - { laravel: '^13.0', testbench: '^11.0', php: '8.4' }
           - { laravel: '^13.0', testbench: '^11.0', php: '8.5' }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, pdo_sqlite, sqlite3, intl
           coverage: none
-      - run: composer update "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+      - run: composer require --dev --no-update "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}"
+      - run: composer update --with-all-dependencies --no-interaction --prefer-dist --no-progress
       - run: composer test
 
   postgres:
@@ -62,7 +63,7 @@ jobs:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -75,7 +76,7 @@ jobs:
     name: Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
