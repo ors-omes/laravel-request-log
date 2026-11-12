@@ -1,0 +1,2 @@
+providers:
+  - OrsOmes\RequestLog\RequestLogServiceProvider

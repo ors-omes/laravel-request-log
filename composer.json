@@ -1,0 +1,63 @@
+{
+    "name": "ors-omes/laravel-request-log",
+    "description": "Structured, redacted, queryable HTTP request log for Laravel: every mutation and every 4xx/5xx with payload, response, exception and query stats.",
+    "keywords": ["laravel", "logging", "audit", "request-log", "http", "observability"],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/ors-omes/laravel-request-log",
+    "support": {
+        "issues": "https://github.com/ors-omes/laravel-request-log/issues",
+        "source": "https://github.com/ors-omes/laravel-request-log",
+        "security": "https://github.com/ors-omes/laravel-request-log/security/policy"
+    },
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/log": "^12.0|^13.0",
+        "illuminate/routing": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/view": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.4",
+        "laravel/pint": "^1.20",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.8|^4.0|^5.0",
+        "pestphp/pest-plugin-laravel": "^3.0|^4.0|^5.0",
+        "phpstan/phpstan-strict-rules": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "OrsOmes\\RequestLog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OrsOmes\\RequestLog\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "OrsOmes\\RequestLog\\RequestLogServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "vendor/bin/pint",
+        "format:test": "vendor/bin/pint --test"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
