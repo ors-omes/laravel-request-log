@@ -1,0 +1,75 @@
+# Request log NBFSZSX52H
+
+- Reference: `NBFSZSX52H`
+- Time: `2026-11-12T11:48:03+07:00`
+- Request: `POST /api/products`
+- Route: `api/products`
+- Action: `App\Http\Controllers\MasterData\ProductController@store`
+- Subject: _null_
+- Status: `422` · reason `error` · response `json`
+- User: `Trần Thị Bình (2)`
+- Tenant: _null_
+- Duration: 5 ms · queries 1 (0 ms) · memory 2048 KB
+- Revision: `3f9c2a7e1b4d8c6f0a5e2d9b7c1f4a8e6d3b0c92`
+- Host: `demo-app-01` · IP: `10.20.0.15`
+
+## Request body (39 B)
+
+```json
+{
+    "code": "SP-QUA-DAI-0001",
+    "unit": "box"
+}
+```
+
+## Response body (245 B)
+
+```json
+{
+    "message": "The code field must not be greater than 10 characters. (and 2 more errors)",
+    "errors": {
+        "code": [
+            "The code field must not be greater than 10 characters."
+        ],
+        "name": [
+            "The name field is required."
+        ],
+        "unit": [
+            "The selected unit is invalid."
+        ]
+    }
+}
+```
+
+## Exception
+
+`Illuminate\Validation\ValidationException` at `vendor/laravel/framework/src/Illuminate/Validation/Validator.php:611`
+
+```text
+The code field must not be greater than 10 characters. (and 2 more errors)
+```
+
+## Request headers
+
+```json
+{
+    "host": "mes.example.com",
+    "user-agent": "curl/8.14.1",
+    "content-type": "application/json",
+    "accept": "application/json",
+    "x-demo-user": "2",
+    "content-length": "39"
+}
+```
+
+## Response headers
+
+```json
+{
+    "cache-control": "no-cache, private",
+    "date": "Thu, 12 Nov 2026 04:48:03 GMT",
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
+    "x-request-reference": "NBFSZSX52H"
+}
+```

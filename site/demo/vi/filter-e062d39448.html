@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Nhật ký request</title>
+<style nonce="ZVonR5RNU+laskPM7NR+nYEp">
+:root{--bg:#f7f7f8;--panel:#fff;--text:#1d1f23;--muted:#6b7079;--line:#e3e5e8;--accent:#2457c5;--ok:#1f7a3a;--warn:#9a6200;--err:#b42318;--code:#f2f3f5}
+@media (prefers-color-scheme:dark){:root{--bg:#141518;--panel:#1c1e22;--text:#e6e7ea;--muted:#9a9fa8;--line:#2d3036;--accent:#7aa2ff;--ok:#5bc27c;--warn:#e0a640;--err:#f07167;--code:#23262b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:16px;margin:0}main{padding:16px 20px;max-width:1500px;margin:0 auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 12px;align-items:end}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+input,select{width:100%;padding:5px 7px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--text);font:inherit}
+button,.button{display:inline-block;padding:6px 12px;border:1px solid var(--accent);border-radius:5px;background:var(--accent);color:#fff;font:inherit;cursor:pointer}
+.button.secondary{background:transparent;color:var(--accent)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600}td.num{text-align:right;white-space:nowrap}
+.mono,code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+pre{background:var(--code);padding:10px;border-radius:6px;overflow:auto;max-height:640px;white-space:pre-wrap;word-break:break-word;margin:6px 0 0}
+.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+.s2,.s3{color:var(--ok)}.s4{color:var(--warn)}.s5{color:var(--err)}.muted{color:var(--muted)}
+.errors{color:var(--err)}.nowrap{white-space:nowrap}.trunc{max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:0}dt{color:var(--muted)}dd{margin:0;word-break:break-all}
+h2{font-size:15px;margin:0 0 10px}h2.title{font-size:17px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}h2.title .mono{font-size:15px}
+details{margin-bottom:10px}summary{cursor:pointer;font-weight:600}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div style="background:#fff7d6;color:#5c4400;border-bottom:1px solid #e9d68a;padding:8px 20px;font:13px/1.4 system-ui,sans-serif;display:flex;gap:16px;flex-wrap:wrap;align-items:center"><strong>Demo</strong><span>Bản demo tĩnh với dữ liệu mẫu. Các link và bộ lọc dựng sẵn bấm được; ô lọc cần app thật mới chạy.</span><a href="../en/index.html" style="color:#2457c5">English</a><a href="../../index.html" style="color:#2457c5">Về trang giới thiệu</a></div>
+<header>
+    <h1><a href="index.html">Nhật ký request</a></h1>
+    </header>
+<main>
+    <form class="panel" method="get" action="index.html">
+        <div class="filters">
+            <div><label for="f-reference">Mã tham chiếu</label><input id="f-reference" name="reference" value="" autocomplete="off"></div>
+            <div><label for="f-method">Method</label>
+                <select id="f-method" name="method"><option value="">Tất cả</option>
+                    <option value="GET" >GET</option><option value="POST" >POST</option><option value="PUT" >PUT</option><option value="PATCH" >PATCH</option><option value="DELETE" >DELETE</option><option value="HEAD" >HEAD</option><option value="OPTIONS" >OPTIONS</option>                </select></div>
+            <div><label for="f-status">Status</label><input id="f-status" name="status" list="request-log-statuses" value="" placeholder="4xx, 500"></div>
+            <div><label for="f-reason">Lý do ghi</label>
+                <select id="f-reason" name="reason"><option value="">Tất cả</option>
+                    <option value="error" >error</option><option value="mutation" >mutation</option><option value="slow" >slow</option><option value="sampled" >sampled</option><option value="forced" >forced</option>                </select></div>
+            <div><label for="f-action">Action</label><input id="f-action" name="action" list="request-log-actions" value="App\Http\Controllers\Production\WorkOrderController@update"></div>
+            <div><label for="f-path">Path bắt đầu bằng</label><input id="f-path" name="path" value="" placeholder="/api/orders"></div>
+            <div><label for="f-route">Route</label><input id="f-route" name="route" value="" placeholder="api/orders/{order}"></div>
+            <div><label for="f-user">Người dùng</label><input id="f-user" name="user" value=""></div>
+            <div><label for="f-tenant">Tenant</label><input id="f-tenant" name="tenant" value=""></div>
+            <div><label for="f-subject">Đối tượng</label><input id="f-subject" name="subject" value="" placeholder="Order:01J…"></div>
+            <div><label for="f-exception">Nhóm lỗi</label><input id="f-exception" name="exception" value=""></div>
+            <div><label for="f-range">Trong</label>
+                <select id="f-range" name="range"><option value="">Tất cả</option>
+                    <option value="15m" >15m</option><option value="1h" >1h</option><option value="6h" >6h</option><option value="24h" >24h</option><option value="7d" >7d</option>                </select></div>
+            <div><label for="f-from">Từ</label><input id="f-from" type="datetime-local" name="from" value=""></div>
+            <div><label for="f-to">Đến</label><input id="f-to" type="datetime-local" name="to" value=""></div>
+            <div><label for="f-per-page">Số dòng</label><input id="f-per-page" type="number" min="1" max="200" name="per_page" value="50"></div>
+            <div class="toolbar"><button type="submit">Lọc</button><a class="button secondary" href="index.html">Xoá lọc</a></div>
+        </div>
+        <datalist id="request-log-actions"><option value="App\Http\Controllers\LoginController">LoginController</option><option value="App\Http\Controllers\MasterData\ProductController@attach">ProductController@attach</option><option value="App\Http\Controllers\MasterData\ProductController@importBom">ProductController@importBom</option><option value="App\Http\Controllers\MasterData\ProductController@store">ProductController@store</option><option value="App\Http\Controllers\Production\ReportController@output">ReportController@output</option><option value="App\Http\Controllers\Production\WorkOrderController@complete">WorkOrderController@complete</option><option value="App\Http\Controllers\Production\WorkOrderController@destroy">WorkOrderController@destroy</option><option value="App\Http\Controllers\Production\WorkOrderController@show">WorkOrderController@show</option><option value="App\Http\Controllers\Production\WorkOrderController@store">WorkOrderController@store</option><option value="App\Http\Controllers\Production\WorkOrderController@update">WorkOrderController@update</option><option value="Illuminate\Foundation\Http\HealthCheck">HealthCheck</option><option value="Laravel\Sanctum\Http\Controllers\CsrfCookieController@show">CsrfCookieController@show</option><option value="OrsOmes\RequestLog\Http\Controllers\ViewerController@index">ViewerController@index</option><option value="OrsOmes\RequestLog\Http\Controllers\ViewerController@markdown">ViewerController@markdown</option><option value="OrsOmes\RequestLog\Http\Controllers\ViewerController@show">ViewerController@show</option></datalist>
+        <datalist id="request-log-statuses"><option value="2xx"></option><option value="3xx"></option><option value="4xx"></option><option value="5xx"></option></datalist>
+            </form>
+
+    
+    <section class="panel">
+                    <table>
+    <thead>
+    <tr>
+        <th>Thời điểm</th>
+        <th>Mã tham chiếu</th>
+        <th>Request</th>
+        <th>Status</th>
+        <th>Action</th>
+        <th>Người dùng</th>
+        <th class="num">Thời gian</th>
+        <th class="num">Truy vấn</th>
+        <th>Exception</th>
+    </tr>
+    </thead>
+    <tbody>
+            <tr>
+            <td class="nowrap mono">2026-11-12 11:48:03</td>
+            <td class="mono"><a href="entry-01m771b5bfbyseyrfxy942z08d.html">AVG352QPH6</a></td>
+            <td class="trunc mono" title="/api/work-orders/12"><strong>PATCH</strong> /api/work-orders/12</td>
+            <td><span class="badge s2">200</span> <span class="muted">mutation</span></td>
+            <td class="trunc mono" title="App\Http\Controllers\Production\WorkOrderController@update">WorkOrderController@update</td>
+            <td class="trunc"><a href="filter-f1ea452a34.html">Nguyễn Văn An</a></td>
+            <td class="num">5 ms</td>
+            <td class="num">1</td>
+            <td class="trunc mono" title=""></td>
+        </tr>
+        </tbody>
+</table>
+                <p class="toolbar">
+                                </p>
+    </section>
+</main>
+</body>
+</html>

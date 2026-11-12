@@ -1,0 +1,87 @@
+# Request log D76JDCN5C8
+
+- Reference: `D76JDCN5C8`
+- Time: `2026-11-12T11:48:05+07:00`
+- Request: `POST /api/work-orders/13/complete`
+- Route: `api/work-orders/{workOrder}/complete`
+- Action: `App\Http\Controllers\Production\WorkOrderController@complete`
+- Subject: `workOrder:13`
+- Status: `500` · reason `error` · response `json`
+- User: `Trần Thị Bình (2)`
+- Tenant: _null_
+- Duration: 8 ms · queries 2 (1 ms) · memory 2048 KB
+- Revision: `3f9c2a7e1b4d8c6f0a5e2d9b7c1f4a8e6d3b0c92`
+- Host: `demo-app-01` · IP: `10.20.0.15`
+
+## Request body (16 B)
+
+```json
+{
+    "quantity": 800
+}
+```
+
+## Response body (33 B)
+
+```json
+{
+    "message": "Server Error"
+}
+```
+
+## Exception
+
+`RuntimeException` at `app/Services/WorkOrderService.php:14`
+
+```text
+Không đủ tồn kho nguyên liệu cho lệnh sản xuất WO-0013: cần 800, còn 120
+```
+
+## Code snippet
+
+```text
+app/Services/WorkOrderService.php:14
+     9|     public function complete(string $code, int $quantity): void
+    10|     {
+    11|         $available = 120;
+    12| 
+    13|         if ($quantity > $available) {
+>   14|             throw new RuntimeException("Không đủ tồn kho nguyên liệu cho lệnh sản xuất {$code}: cần {$quantity}, còn {$available}");
+    15|         }
+    16|     }
+    17| }
+    18| 
+```
+
+## Trace
+
+```text
+app/Http/Controllers/Production/WorkOrderController.php:18 App\Services\WorkOrderService->complete
+vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:46 App\Http\Controllers\Production\WorkOrderController->complete
+…[41 framework frames omitted]
+```
+
+## Request headers
+
+```json
+{
+    "host": "mes.example.com",
+    "user-agent": "curl/8.14.1",
+    "content-type": "application/json",
+    "accept": "application/json",
+    "x-demo-user": "2",
+    "content-length": "16"
+}
+```
+
+## Response headers
+
+```json
+{
+    "cache-control": "no-cache, private",
+    "date": "Thu, 12 Nov 2026 04:48:05 GMT",
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
+    "x-request-reference": "D76JDCN5C8"
+}
+```

@@ -1,0 +1,60 @@
+# Request log 7WJCVAEFWX
+
+- Reference: `7WJCVAEFWX`
+- Time: `2026-11-12T11:48:04+07:00`
+- Request: `POST /api/attachments`
+- Route: `api/attachments`
+- Action: `App\Http\Controllers\MasterData\ProductController@attach`
+- Subject: _null_
+- Status: `201` · reason `mutation` · response `json`
+- User: `Trần Thị Bình (2)`
+- Tenant: _null_
+- Duration: 5 ms · queries 1 (0 ms) · memory 6144 KB
+- Revision: `3f9c2a7e1b4d8c6f0a5e2d9b7c1f4a8e6d3b0c92`
+- Host: `demo-app-01` · IP: `10.20.0.15`
+
+## Request body (340 B)
+
+```json
+{
+    "work_order_id": "12",
+    "file": {
+        "file": "ke-hoach.csv",
+        "size": 30,
+        "mime": "text/csv"
+    }
+}
+```
+
+## Response body (25 B)
+
+```json
+{
+    "stored": "ke-hoach.csv"
+}
+```
+
+## Request headers
+
+```json
+{
+    "host": "mes.example.com",
+    "user-agent": "curl/8.14.1",
+    "accept": "application/json",
+    "x-demo-user": "2",
+    "content-length": "340",
+    "content-type": "multipart/form-data; boundary=------------------------LAtbNxZN0Gm240ZorkPlhd"
+}
+```
+
+## Response headers
+
+```json
+{
+    "cache-control": "no-cache, private",
+    "date": "Thu, 12 Nov 2026 04:48:04 GMT",
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
+    "x-request-reference": "7WJCVAEFWX"
+}
+```
