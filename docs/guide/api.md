@@ -52,7 +52,7 @@ The list accepts the same filters as the viewer (`reference`, `method`, `status`
       "action": "App\\Http\\Controllers\\Production\\WorkOrderController@complete",
       "subject": "workOrder:12",
       "status": 500,
-      "user": { "id": "2", "label": "Trần Thị Bình" },
+      "user": { "id": "2", "label": "Ben Turner" },
       "tenant_id": null,
       "duration_ms": 8,
       "query_count": 2,

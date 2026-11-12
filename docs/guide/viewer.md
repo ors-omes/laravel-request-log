@@ -8,7 +8,7 @@ The viewer lives at `/request-logs` (`viewer.path`). It is server-rendered, has 
 
 ![The viewer list](/screenshots/list.png){.screenshot}
 
-[Open the live demo](https://ors-omes.github.io/laravel-request-log/demo/en/index.html) to click through it with sample data.
+[Open the live demo](https://ors-omes.github.io/laravel-request-log/demo/index.html) to click through it with sample data.
 
 ## Access
 

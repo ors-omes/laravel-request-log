@@ -28,7 +28,11 @@ pnpm install
 pnpm docs:dev
 ```
 
-`docs/public/demo` is a static copy of the viewer with sample data; regenerate it and
-`docs/public/screenshots` when the viewer changes.
+`docs/public/demo` is a static copy of the viewer with sample data. When the viewer
+changes, rebuild it and `docs/public/screenshots` with:
+
+```bash
+tools/demo/build.sh   # needs php, composer, python3 and Chrome/Chromium
+```
 
 Security issues: see [SECURITY.md](SECURITY.md), do not open a public issue.

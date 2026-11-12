@@ -1,0 +1,37 @@
+# Request log ZDKA8C02AH
+
+- Reference: `ZDKA8C02AH`
+- Time: `2026-11-12T06:37:42+00:00`
+- Request: `DELETE /api/work-orders/12`
+- Route: `api/work-orders/{workOrder}`
+- Action: `App\Http\Controllers\Production\WorkOrderController@destroy`
+- Subject: `workOrder:12`
+- Status: `204` · reason `mutation` · response `empty`
+- User: `Alice Carter (1)`
+- Tenant: _null_
+- Duration: 7 ms · queries 1 (0 ms) · memory 2048 KB
+- Revision: `3f9c2a7e1b4d8c6f0a5e2d9b7c1f4a8e6d3b0c92`
+- Host: `demo-app-01` · IP: `10.20.0.15`
+
+## Request headers
+
+```json
+{
+    "host": "app.example.com",
+    "user-agent": "curl/8.14.1",
+    "content-type": "application/json",
+    "accept": "application/json",
+    "x-demo-user": "1"
+}
+```
+
+## Response headers
+
+```json
+{
+    "cache-control": "no-cache, private",
+    "date": "Thu, 12 Nov 2026 06:37:42 GMT",
+    "access-control-allow-origin": "*",
+    "x-request-reference": "ZDKA8C02AH"
+}
+```

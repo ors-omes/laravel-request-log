@@ -72,7 +72,7 @@ it('shrinks until the body fits the byte limit and records the original size', f
 it('falls back to a utf-8 safe cut with a size marker when the structure cannot shrink', function (): void {
     Config::set('request-log.capture.request_body_bytes', 300);
 
-    $this->postJson('/api/orders', [str_repeat('Tiếng Việt có dấu ', 200) => 1])->assertCreated();
+    $this->postJson('/api/orders', [str_repeat('Grüße aus Köln, naïve café — €50 ', 200) => 1])->assertCreated();
 
     $body = (string) latestRequestLog()->request_body;
 

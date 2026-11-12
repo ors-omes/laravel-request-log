@@ -1,0 +1,66 @@
+# Request log EFFMW40XCW
+
+- Reference: `EFFMW40XCW`
+- Time: `2026-11-12T06:37:39+00:00`
+- Request: `POST /api/work-orders`
+- Route: `api/work-orders`
+- Action: `App\Http\Controllers\Production\WorkOrderController@store`
+- Subject: _null_
+- Status: `201` · reason `mutation` · response `json`
+- User: `Alice Carter (1)`
+- Tenant: _null_
+- Duration: 12 ms · queries 1 (0 ms) · memory 4096 KB
+- Revision: `3f9c2a7e1b4d8c6f0a5e2d9b7c1f4a8e6d3b0c92`
+- Host: `demo-app-01` · IP: `10.20.0.15`
+
+## Request body (116 B)
+
+```json
+{
+    "product_code": "ARM-BRACKET-01",
+    "quantity": 500,
+    "line": "L2",
+    "due_date": "2026-11-20",
+    "note": "Deliver before shift C"
+}
+```
+
+## Response body (94 B)
+
+```json
+{
+    "data": {
+        "id": 12,
+        "code": "WO-0012",
+        "product_code": "ARM-BRACKET-01",
+        "quantity": 500,
+        "line": "L2"
+    }
+}
+```
+
+## Request headers
+
+```json
+{
+    "host": "app.example.com",
+    "user-agent": "curl/8.14.1",
+    "content-type": "application/json",
+    "accept": "application/json",
+    "x-demo-user": "1",
+    "authorization": "[REDACTED]",
+    "content-length": "116"
+}
+```
+
+## Response headers
+
+```json
+{
+    "cache-control": "no-cache, private",
+    "date": "Thu, 12 Nov 2026 06:37:39 GMT",
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
+    "x-request-reference": "EFFMW40XCW"
+}
+```

@@ -2,7 +2,7 @@
 
 Structured, redacted and queryable HTTP request log for Laravel 12 and 13.
 
-**[Documentation](https://ors-omes.github.io/laravel-request-log/) · [Live demo of the viewer](https://ors-omes.github.io/laravel-request-log/demo/en/index.html) · [Bản demo tiếng Việt](https://ors-omes.github.io/laravel-request-log/demo/vi/index.html) · [llms.txt](https://ors-omes.github.io/laravel-request-log/llms.txt)**
+**[Documentation](https://ors-omes.github.io/laravel-request-log/) · [Live demo of the viewer](https://ors-omes.github.io/laravel-request-log/demo/index.html) · [llms.txt](https://ors-omes.github.io/laravel-request-log/llms.txt)**
 
 ![Request log viewer](docs/public/screenshots/list.png)
 
@@ -33,7 +33,6 @@ Each row is written to its own table with indexed columns, **after** the respons
 - [Auditing the data](#auditing-the-data)
 - [Configuration reference](#configuration-reference)
 - [Development](#development)
-- [Tiếng Việt](#tiếng-việt)
 
 ## Why
 
@@ -359,21 +358,6 @@ REQUEST_LOG_TEST_DB=pgsql DB_DATABASE=request_log_test DB_USERNAME=postgres comp
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Tiếng Việt
-
-Package ghi nhật ký request cho Laravel. Mặc định nó ghi mọi POST/PUT/PATCH/DELETE và mọi request trả 4xx/5xx, kể cả GET. Mỗi dòng gồm:
-
-- payload và response (đã che dữ liệu nhạy cảm, quá dài thì rút gọn có đánh dấu `…[+N]` thay vì bỏ cả);
-- exception kèm đoạn mã nguồn, trace và mã nhóm lỗi;
-- thống kê truy vấn;
-- người dùng, tenant, đối tượng bị tác động.
-
-Mã tham chiếu 10 ký tự được đưa vào `Context`, header `X-Request-Reference` và `reference_code` của response lỗi (qua `RequestLog::referenceFor($status)`).
-
-Viewer ở `/request-logs` mở cho môi trường `local` hoặc cho người qua gate `viewRequestLogs`. API JSON tắt mặc định.
-
-Trong giai đoạn beta, hãy chạy `php artisan request-log:audit --since=24h` trên dữ liệu thật để kiểm tra còn bí mật nào bị lọt không.
 
 ## License
 

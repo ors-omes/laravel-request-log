@@ -1,0 +1,49 @@
+# Request log YTF7C28WHG
+
+- Reference: `YTF7C28WHG`
+- Time: `2026-11-12T06:37:41+00:00`
+- Request: `GET /api/reports/output?shift=A&date=2026-11-12`
+- Route: `api/reports/output`
+- Action: `App\Http\Controllers\Production\ReportController@output`
+- Subject: _null_
+- Status: `200` · reason `slow` · response `json`
+- User: `Alice Carter (1)`
+- Tenant: _null_
+- Duration: 328 ms · queries 7 (0 ms) · memory 4096 KB
+- Revision: `3f9c2a7e1b4d8c6f0a5e2d9b7c1f4a8e6d3b0c92`
+- Host: `demo-app-01` · IP: `10.20.0.15`
+
+## Response body (36 B)
+
+```json
+{
+    "data": {
+        "shift": "A",
+        "output": 1250
+    }
+}
+```
+
+## Request headers
+
+```json
+{
+    "host": "app.example.com",
+    "user-agent": "curl/8.14.1",
+    "content-type": "application/json",
+    "accept": "application/json",
+    "x-demo-user": "1"
+}
+```
+
+## Response headers
+
+```json
+{
+    "cache-control": "no-cache, private",
+    "date": "Thu, 12 Nov 2026 06:37:42 GMT",
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
+    "x-request-reference": "YTF7C28WHG"
+}
+```

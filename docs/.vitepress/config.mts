@@ -27,7 +27,6 @@ export default defineConfig({
     plugins: [
       llmstxt({
         domain: 'https://ors-omes.github.io',
-        ignoreFiles: ['vi/**'],
         description: 'Structured, redacted, queryable HTTP request log for Laravel 12 and 13.',
         details: 'Records every POST/PUT/PATCH/DELETE and every 4xx/5xx response (any method) after the response is sent: redacted and shortened payloads and responses, exception with snippet and grouping hash, query statistics, user, tenant, subject, route and action, with a reference code shared through the Laravel Context, a response header and error responses.',
       }),
@@ -46,8 +45,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/introduction', activeMatch: '/guide/' },
       { text: 'Reference', link: '/reference/configuration', activeMatch: '/reference/' },
-      { text: 'Demo', link: '/demo/en/index.html', target: '_self' },
-      { text: 'Tiếng Việt', link: '/vi/' },
+      { text: 'Demo', link: '/demo/index.html', target: '_self' },
       {
         text: 'v0.1.0-beta.2',
         items: [

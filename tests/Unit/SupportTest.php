@@ -40,7 +40,7 @@ it('grows markdown fences beyond any backtick run in the content', function (): 
 });
 
 it('cuts text on a utf-8 boundary and reports sizes', function (): void {
-    $cut = (new Truncator())->text(str_repeat('ệ', 100), 60);
+    $cut = (new Truncator())->text(str_repeat('€', 100), 60);
 
     expect(strlen($cut))->toBeLessThanOrEqual(60)
         ->and(mb_check_encoding($cut, 'UTF-8'))->toBeTrue()

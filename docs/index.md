@@ -16,7 +16,7 @@ hero:
       link: /guide/introduction
     - theme: alt
       text: Live demo
-      link: /demo/en/index.html
+      link: /demo/index.html
       target: _self
     - theme: alt
       text: GitHub

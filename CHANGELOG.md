@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+- Vietnamese viewer translation. The package, its viewer and its documentation
+  are English only.
+
 ## [0.1.0-beta.2] - 2026-11-12
 
 ### Changed
@@ -13,7 +17,7 @@ All notable changes to this project are documented here. The format follows
   `capture.max_items` and `capture.max_string` now only apply when content
   exceeds the limit (beta.1 cut arrays above 500 items even when they fit).
 - When content must be shortened, the kept part is sized to fill the byte
-  limit (e.g. ~1,900 of 2,600 BOM rows in 512 KB instead of 500).
+  limit (e.g. ~1,700 of 2,600 BOM rows in 512 KB instead of 500).
 
 ### Fixed
 - `created_at` was built in UTC and stored without an offset, so it read

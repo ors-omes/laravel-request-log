@@ -25,18 +25,18 @@ Request bodies up to **512 KB** and response bodies up to **256 KB** are stored 
 
 ```json
 {
-  "product_code": "SP-ARM-01",
+  "product_code": "ARM-BRACKET-01",
   "rows": [
-    { "line": 1, "component": "NVL-0001", "qty": 1.25 },
+    { "line": 1, "component": "RM-0001", "qty": 1.25 },
     "…",
-    { "line": 1848, "component": "NVL-1848", "qty": 2310 },
-    "…[+752 items]"
+    { "line": 1695, "component": "RM-1695", "qty": 2118.75 },
+    "…[+905 items]"
   ],
   "note": "The first characters of a long string…[+20113 chars]"
 }
 ```
 
-- The kept part is sized to fill the limit. In the demo, a 675 KB BOM import keeps 1,848 of its 2,600 rows.
+- The kept part is sized to fill the limit. In the demo, a 733 KB BOM import keeps 1,695 of its 2,600 rows in 471 KB.
 - `request_bytes` / `response_bytes` hold the original size, and `*_truncated` tells you something was cut.
 - If the structure cannot shrink enough, the text is cut on a UTF-8 boundary and ends with `…[truncated: kept X of Y bytes]`.
 - Bodies above `capture.max_parse_bytes` (4 MB) are not decoded at all; they are recorded as `[body too large to parse: N bytes]`.
