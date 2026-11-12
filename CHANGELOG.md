@@ -4,11 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.0-beta.3] - 2026-11-12
 
 ### Removed
 - Vietnamese viewer translation. The package, its viewer and its documentation
   are English only.
+
+### Fixed
+- The viewer renders in English whatever the application locale is. With only
+  English strings shipped, an application whose locale and fallback locale are
+  not `en` showed raw `request-log::viewer.*` keys.
 
 ## [0.1.0-beta.2] - 2026-11-12
 

@@ -60,6 +60,17 @@ it('lists, filters and shows records through the gate with strict headers', func
         ->and($markdown->getContent())->toContain('## Request body');
 });
 
+it('renders in English whatever the application locale is', function (): void {
+    allowViewer();
+    Config::set('app.fallback_locale', 'vi');
+    $this->app->setLocale('vi');
+    $this->postJson('/api/orders')->assertCreated();
+
+    $this->actingAs(new User(['id' => 'admin']))->get('/request-logs')->assertOk()
+        ->assertSee('<title>Request log</title>', false)
+        ->assertDontSee('request-log::viewer.');
+});
+
 it('reports invalid filters instead of failing', function (): void {
     allowViewer();
 

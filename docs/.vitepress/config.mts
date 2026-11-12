@@ -47,7 +47,7 @@ export default defineConfig({
       { text: 'Reference', link: '/reference/configuration', activeMatch: '/reference/' },
       { text: 'Demo', link: '/demo/index.html', target: '_self' },
       {
-        text: 'v0.1.0-beta.2',
+        text: 'v0.1.0-beta.3',
         items: [
           { text: 'Changelog', link: '/reference/changelog' },
           { text: 'Releases', link: `${repo}/releases` },

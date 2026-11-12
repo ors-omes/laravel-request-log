@@ -6,11 +6,13 @@ namespace OrsOmes\RequestLog\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The viewer ships no JavaScript; the only inline style carries a per-request
- * nonce, so the policy can deny everything else.
+ * nonce, so the policy can deny everything else. It is English only, so it
+ * renders in English whatever the application locale is.
  */
 final class ViewerHeaders
 {
@@ -21,6 +23,8 @@ final class ViewerHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        App::setLocale('en');
+
         $nonce = base64_encode(random_bytes(18));
         $request->attributes->set(self::NONCE_ATTRIBUTE, $nonce);
 
