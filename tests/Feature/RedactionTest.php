@@ -72,9 +72,54 @@ it('redacts request and response headers with separate lists', function (): void
     $this->post('/api/redirect')->assertRedirect();
     $response = json_decode((string) latestRequestLog()->response_headers, true);
 
-    expect($response)->toHaveKey('location')
-        ->and(latestRequestLog()->response_body)->toEndWith('/done?token=[REDACTED]&page=2')
+    expect($response['location'])->toBe('http://localhost/done?token=[REDACTED]&page=[REDACTED]')
+        ->and(latestRequestLog()->response_body)->toBe('http://localhost/done?token=[REDACTED]&page=[REDACTED]')
         ->and(latestRequestLog()->response_kind)->toBe('redirect');
+});
+
+it('keeps the path and parameter names of url headers but not their values', function (): void {
+    $this->withHeaders([
+        'Referer' => 'https://app.test/reset-password/0f3a9c1d2e4b5a69788776655443322?email=a@b.test',
+        'X-Forwarded-Uri' => '/api/orders?token=proxy-token&page=2',
+    ])->postJson('/api/orders')->assertCreated();
+
+    $request = json_decode((string) latestRequestLog()->request_headers, true);
+
+    expect($request['referer'])->toBe('https://app.test/reset-password/[REDACTED]?email=[REDACTED]')
+        ->and($request['x-forwarded-uri'])->toBe('/api/orders?token=[REDACTED]&page=[REDACTED]');
+
+    $this->withHeaders(['Referer' => 'https://app.test/orders/01JCDV7Z9R2Q4P3M5N6B7C8D9E/lines/3f2504e0-4f89-11d3-9a0c-0305e82c3301/summer-sale-2026'])
+        ->postJson('/api/orders')->assertCreated();
+
+    expect(json_decode((string) latestRequestLog()->request_headers, true)['referer'])
+        ->toBe('https://app.test/orders/01JCDV7Z9R2Q4P3M5N6B7C8D9E/lines/3f2504e0-4f89-11d3-9a0c-0305e82c3301/summer-sale-2026');
+});
+
+it('redacts every query and fragment value of a redirect, whatever its name', function (): void {
+    $this->post('/api/oauth/authorize')->assertRedirect();
+
+    $expected = 'https://client.test/callback?code=[REDACTED]&state=[REDACTED]#access_token=[REDACTED]';
+
+    expect(latestRequestLog()->response_body)->toBe($expected)
+        ->and(json_decode((string) latestRequestLog()->response_headers, true)['location'])->toBe($expected);
+});
+
+it('stores url headers as sent when they are removed from the list', function (): void {
+    Config::set('request-log.redact.url_headers', []);
+
+    $this->withHeaders(['Referer' => 'https://app.test/list?page=2'])->post('/api/redirect')->assertRedirect();
+
+    expect(json_decode((string) latestRequestLog()->request_headers, true)['referer'])->toBe('https://app.test/list?page=2')
+        ->and(json_decode((string) latestRequestLog()->response_headers, true)['location'])->toBe('http://localhost/done?token=secret-token-value&page=2')
+        ->and(latestRequestLog()->response_body)->toBe('http://localhost/done?token=[REDACTED]&page=2');
+});
+
+it('omits the redirect target on metadata-only routes', function (): void {
+    $this->postJson('/api/metadata-redirect', ['password' => 'x'])->assertRedirect();
+
+    expect(latestRequestLog()->response_kind)->toBe('redirect')
+        ->and(latestRequestLog()->response_body)->toBe('[omitted: redirect]')
+        ->and(latestRequestLog()->request_body)->toStartWith('[omitted:');
 });
 
 it('stores uploaded files as metadata only', function (): void {
@@ -133,4 +178,22 @@ it('redacts sensitive route parameters in the path and signed url signatures', f
         ->and(latestRequestLog()->url)->toBe('/api/reset-password/[REDACTED]?email=a@b.c&signature=[REDACTED]')
         ->and(latestRequestLog()->route_uri)->toBe('api/reset-password/{token}')
         ->and(latestRequestLog()->subject)->toBeNull();
+});
+
+it('never stores a secret route value as path or subject, whatever the binding', function (): void {
+    $this->postJson('/api/invites/model-token-secret')->assertOk();
+
+    expect(latestRequestLog()->path)->toBe('/api/invites/[REDACTED]')
+        ->and(latestRequestLog()->subject)->toBeNull();
+
+    $this->postJson('/api/invitations/key-token-secret')->assertOk();
+
+    expect(latestRequestLog()->path)->toBe('/api/invitations/[REDACTED]')
+        ->and(latestRequestLog()->subject)->toBeNull();
+
+    $this->postJson('/api/orders/by-token/field-token-secret?page=2')->assertOk();
+
+    expect(latestRequestLog()->path)->toBe('/api/orders/by-token/[REDACTED]')
+        ->and(latestRequestLog()->url)->toBe('/api/orders/by-token/[REDACTED]?page=2')
+        ->and(latestRequestLog()->subject)->toBe('Order:ord_1');
 });

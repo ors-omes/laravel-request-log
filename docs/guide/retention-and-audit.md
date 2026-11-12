@@ -38,6 +38,10 @@ It scans `url`, headers, bodies, `exception_message` and `context` for:
 | `secret-query` | Such parameters in query strings |
 | `private-key` | `-----BEGIN … PRIVATE KEY-----` |
 | `card-number` | 13–19 digit numbers that pass the Luhn check |
+| `url-header` | URL headers and redirect targets that still hold a query or fragment value, or a token-like path segment |
+| `sql-value` | Database error messages that still quote a value |
+
+The last two compare a stored value with what the current redaction would store. They find records written before an upgrade or while a header was left out of `redact.url_headers`; new records are already redacted, so prune the old ones.
 
 It prints masked excerpts (never the full value) and exits with status `1` when it finds anything, so you can run it in a scheduled job or CI. To fix a finding, add the key to `redact.extra_keys` (or a pattern to `redact.value_patterns`), then prune the affected rows.
 
@@ -47,5 +51,5 @@ It prints masked excerpts (never the full value) and exits with status `1` when 
 +----------------------------+------------+--------------+-------------+----------------------------+
 | 01m771b5w7t5bfj7mm6z3wzfq9 | TASHGJ465T | request_body | card-number | 4111 1111 …(19 chars)      |
 +----------------------------+------------+--------------+-------------+----------------------------+
-1 finding(s) in 214 record(s). Add the keys to request-log.redact.extra_keys or a value pattern, then prune affected rows.
+1 finding(s) in 214 record(s). Add the keys to request-log.redact.extra_keys or a value pattern (url-header and sql-value findings are already redacted in new records), then prune affected rows.
 ```

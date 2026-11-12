@@ -24,6 +24,9 @@ final class Redactor
     private readonly array $responseHeaders;
 
     /** @var list<string> */
+    private readonly array $urlHeaders;
+
+    /** @var list<string> */
     private readonly array $valuePatterns;
 
     private readonly string $replacement;
@@ -38,6 +41,7 @@ final class Redactor
         );
         $this->requestHeaders = array_map(self::normalizeKey(...), self::strings('request-log.redact.request_headers'));
         $this->responseHeaders = array_map(self::normalizeKey(...), self::strings('request-log.redact.response_headers'));
+        $this->urlHeaders = array_map(self::normalizeKey(...), self::strings('request-log.redact.url_headers'));
         $this->valuePatterns = self::strings('request-log.redact.value_patterns');
         $this->replacement = Config::string('request-log.redact.replacement');
         $this->maxDepth = Config::integer('request-log.capture.max_depth');
@@ -100,13 +104,89 @@ final class Redactor
                 continue;
             }
 
-            $redacted[$name] = $this->string(implode(', ', array_map(
+            $value = implode(', ', array_map(
                 static fn (mixed $value): string => is_scalar($value) ? (string) $value : '',
                 is_array($values) ? $values : [$values],
-            )));
+            ));
+
+            $redacted[$name] = in_array($normalized, $this->urlHeaders, true) ? $this->url($value) : $this->string($value);
         }
 
         return $redacted;
+    }
+
+    public function isUrlHeader(string $name): bool
+    {
+        return in_array(self::normalizeKey($name), $this->urlHeaders, true);
+    }
+
+    /**
+     * A URL whose parameters the package cannot know (redirect target,
+     * Referer): the path and parameter names stay, every query and fragment
+     * value is replaced, and so is any path segment that looks like a token.
+     * Also works on a value that embeds a URL, such as "0; url=/next?…".
+     */
+    public function url(string $url): string
+    {
+        $url = preg_replace_callback(
+            '/([?&#][^=&#]*=)[^&#]*/',
+            fn (array $match): string => $match[1].$this->replacement,
+            $url,
+        ) ?? $this->replacement;
+
+        $url = preg_replace_callback(
+            '~[^/?#&=;,\s]+~',
+            fn (array $match): string => self::isOpaque($match[0]) ? $this->replacement : $match[0],
+            $url,
+        ) ?? $this->replacement;
+
+        return $this->string($url);
+    }
+
+    /**
+     * A database driver message without the values it quotes. PostgreSQL
+     * DETAIL and CONTEXT lines are dropped; quoted text after ":", "=",
+     * "value" or "entry" is replaced (`invalid input syntax for type
+     * integer: "…"`, `Duplicate entry '…'`), and so is SQL Server's
+     * "duplicate key value is (…)". Identifiers such as `relation "orders"`
+     * or `for column 'qty'` stay.
+     */
+    public function driverMessage(string $message): string
+    {
+        $message = preg_split('/\s*\b(?:DETAIL|CONTEXT):/', $message)[0] ?? $message;
+
+        $message = preg_replace_callback(
+            '/((?::|=|\bvalue|\bentry)\s*)(["\'])(?:.*?)\2(?=[\s,.;:)\]]|$)/su',
+            fn (array $match): string => $match[1].$match[2].$this->replacement.$match[2],
+            $message,
+        ) ?? $this->replacement;
+
+        $message = preg_replace_callback(
+            '/(\bkey value is )\(.*?\)(?=[\s.]|$)/su',
+            fn (array $match): string => $match[1].'('.$this->replacement.')',
+            $message,
+        ) ?? $this->replacement;
+
+        return $this->string($message);
+    }
+
+    /**
+     * A run of 16+ letters and digits that mixes both, other than a ULID:
+     * password reset tokens, signed hashes, invitation codes.
+     */
+    private static function isOpaque(string $segment): bool
+    {
+        if (preg_match_all('/[A-Za-z0-9]{16,}/', rawurldecode($segment), $runs) === 0) {
+            return false;
+        }
+
+        foreach ($runs[0] as $run) {
+            if (! Str::isUlid($run) && preg_match('/\d/', $run) === 1 && preg_match('/[A-Za-z]/', $run) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function normalizeKey(string $key): string

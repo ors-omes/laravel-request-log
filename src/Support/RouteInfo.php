@@ -64,7 +64,9 @@ final class RouteInfo
     /**
      * The record the request acted on: the last route-model-bound parameter
      * ("Order:01J..."), else the last id-like parameter ("order:42").
-     * Parameters whose name is sensitive (e.g. {token}) are never used.
+     * Parameters named like a secret ({token}), models whose primary key is
+     * named like one, and raw values looked up by a sensitive column
+     * ({invitation:token}) are never used.
      *
      * @param  Closure(string): bool  $isSensitive
      */
@@ -76,14 +78,14 @@ final class RouteInfo
 
         $parameters = array_reverse($route->parameters(), true);
 
-        foreach ($parameters as $value) {
-            if ($value instanceof Model) {
+        foreach ($parameters as $name => $value) {
+            if ($value instanceof Model && ! $isSensitive((string) $name) && ! $isSensitive($value->getKeyName())) {
                 return self::modelSubject($value);
             }
         }
 
         foreach ($parameters as $name => $value) {
-            if ($value instanceof BackedEnum || $isSensitive($name)) {
+            if ($value instanceof Model || $value instanceof BackedEnum || self::isSensitiveParameter($route, (string) $name, $isSensitive)) {
                 continue;
             }
 
@@ -93,6 +95,29 @@ final class RouteInfo
         }
 
         return null;
+    }
+
+    /**
+     * Whether the raw value of a route parameter is a secret: its name is
+     * sensitive ({token}), or the record is looked up by a sensitive column
+     * ({invitation:token}, or a bound model whose route key is "token").
+     *
+     * @param  Closure(string): bool  $isSensitive
+     */
+    public static function isSensitiveParameter(Route $route, string $name, Closure $isSensitive): bool
+    {
+        if ($isSensitive($name)) {
+            return true;
+        }
+
+        $field = $route->bindingFieldFor($name);
+        $value = $route->parameter($name);
+
+        if ($field === null && $value instanceof Model) {
+            $field = $value->getRouteKeyName();
+        }
+
+        return is_string($field) && $isSensitive($field);
     }
 
     private static function modelSubject(Model $model): ?string

@@ -16,7 +16,7 @@ Each recorded request is one row in `request_logs`. The full column list is in t
 | Exception | `exception_class`, `exception_message`, `exception_location`, `exception_hash`, `exception_snippet`, `exception_trace` |
 | Extra | `context` (your [`contextUsing`](./hooks#context) data) |
 
-- **`subject`** is the record the request acted on. It is taken from the last route-model-bound parameter (`Order:01J…`), or else the last id-like route parameter (`order:42`). Sensitive parameter names such as `{token}` are never used. You can override it with [`resolveSubjectUsing`](./hooks#subject).
+- **`subject`** is the record the request acted on. It is taken from the last route-model-bound parameter (`Order:01J…`), or else the last id-like route parameter (`order:42`). Parameters named like a secret (`{token}`), models whose primary key is named like one, and raw values looked up by a secret column (`{invitation:token}`) are never used. You can override it with [`resolveSubjectUsing`](./hooks#subject).
 - **`user_id`** is read only if authentication already resolved a user during the request. Recording never triggers a guard or an extra query.
 
 ## Large payloads are shortened, not discarded
@@ -57,7 +57,7 @@ Request bodies up to **512 KB** and response bodies up to **256 KB** are stored 
 | `response_kind` | Stored |
 |---|---|
 | `json` | Redacted, shortened body. This includes RFC 9457 problem responses, so validation errors stay readable. |
-| `redirect` | Target URL, with its query string redacted |
+| `redirect` | Target URL with every query and fragment value and token-like path segments redacted (see [URL headers](./security#redaction)); `[omitted: redirect]` on metadata-only routes |
 | `html` | `[html text/html: N bytes]`. HTML forms carry CSRF tokens, so the markup is not stored. |
 | `text` | Placeholder, unless `capture.raw_text_bodies` is on |
 | `stream`, `file`, `binary`, `empty` | A description only; streams are never read |
@@ -69,7 +69,7 @@ The exception is read from the rendered response, where Laravel attaches it. As 
 | Column | Content |
 |---|---|
 | `exception_class` | Fully-qualified class |
-| `exception_message` | Message, redacted. `QueryException` messages keep the SQL with `?` placeholders; PostgreSQL `DETAIL:` lines and MySQL duplicate-entry values are removed. |
+| `exception_message` | Message, redacted. Database errors keep the driver message and the SQL with `?` placeholders, without the values the driver quotes (see [Security](./security#exceptions)). |
 | `exception_location` | `app/Services/WorkOrderService.php:14`, relative to the project |
 | `exception_hash` | `md5(class + location)`, which groups every occurrence of the same failure |
 | `exception_snippet` | Source lines around the first project frame (5xx only) |

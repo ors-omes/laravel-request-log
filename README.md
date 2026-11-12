@@ -80,6 +80,8 @@ The service provider is auto-discovered. It prepends the recorder to the global 
 php artisan vendor:publish --tag=request-log-config
 ```
 
+Options added by later versions still apply to a published file: missing keys get their default at any depth, while lists you set are kept as written.
+
 We recommend a dedicated database connection, which keeps log volume out of your application database and its backups:
 
 ```dotenv
@@ -148,7 +150,7 @@ The rules:
 | `response_kind` | Stored |
 |---|---|
 | `json` | Redacted, shortened body. This includes RFC 9457 problem responses, so validation errors stay readable. |
-| `redirect` | Target URL, query redacted |
+| `redirect` | Target URL with every query and fragment value and token-like path segments redacted (`[omitted: redirect]` on metadata-only routes) |
 | `html` | `[html text/html: N bytes]`. HTML forms carry CSRF tokens. |
 | `text` | Placeholder, unless `capture.raw_text_bodies` is on |
 | `stream`, `file`, `binary`, `empty` | Description only; streams are never read |
@@ -165,6 +167,8 @@ The defaults are chosen so that turning the package on does not create a second 
 - Matching values are replaced with `[REDACTED]`, **including empty values**.
 - Value patterns (JWT, `Bearer …`, `Basic …`) are removed from every stored string, even under harmless keys. A token pasted into a `note` field is caught.
 - Request and response headers have separate lists (`authorization`, `cookie`, `x-api-key`, … / `set-cookie`, …).
+- Headers that carry a URL (`location`, `referer`, `refresh`, `x-forwarded-uri`, …) keep their path and parameter names, but every query and fragment value is replaced, and so is any path segment that looks like a token. Remove a header from `redact.url_headers` to store it as sent.
+- Route parameters named like a secret (`{token}`) or looked up by a secret column (`{invitation:token}`, a model whose key is `token`) never reach `path`, `url` or `subject`.
 - Bodies that cannot be redacted by key (XML, CSV, plain text, HTML) are not stored by default.
 - Add your own keys in `redact.extra_keys`.
 
@@ -172,7 +176,7 @@ The defaults are chosen so that turning the package on does not create a second 
 - Paths are stored relative to the project.
 - Frames have no arguments.
 - The snippet and trace are only stored for status ≥ 500.
-- `QueryException` messages are stored **without bound values**: the SQL keeps its `?` placeholders, and PostgreSQL `DETAIL:` lines and MySQL duplicate-entry values are removed.
+- Database errors keep the driver message and the SQL with its `?` placeholders, but **not the values**: PostgreSQL `DETAIL:`/`CONTEXT:` lines are dropped and quoted values (`invalid input syntax for type integer: "[REDACTED]"`, `Duplicate entry '[REDACTED]'`) are replaced. Identifiers such as `relation "orders"` stay. Set `exceptions.query_bindings` to `true` to store Laravel's full message with bound values.
 
 **Access**
 - The viewer is allowed in the `local` environment or through the `viewRequestLogs` gate. Outside `local`, the package's own gate denies everyone until you define it.
@@ -321,7 +325,8 @@ It scans stored URLs, headers, bodies, exception messages and context for:
 - secret-looking keys that still have a value;
 - secret query parameters;
 - private keys;
-- card numbers (Luhn-checked).
+- card numbers (Luhn-checked);
+- URL headers, redirect targets and database error messages that the current redaction would still change (records written before an upgrade, or with a narrower configuration).
 
 It prints masked excerpts and exits with status 1 if it finds anything. Add the missing keys to `redact.extra_keys`, then prune the affected rows.
 

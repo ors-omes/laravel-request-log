@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OrsOmes\RequestLog;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Http\Kernel;
@@ -28,9 +29,37 @@ use Throwable;
 
 final class RequestLogServiceProvider extends ServiceProvider
 {
+    /**
+     * Fill keys a published config does not have yet (added by a later
+     * version) with their defaults, at every depth. Unlike mergeConfigFrom()
+     * this reaches nested keys such as "redact.url_headers", and unlike
+     * array_replace_recursive() it keeps lists the application set as they
+     * are, so a list can still be shortened or emptied.
+     *
+     * @param  array<array-key, mixed>  $defaults
+     * @param  array<array-key, mixed>  $values
+     * @return array<array-key, mixed>
+     */
+    public static function fillMissingConfig(array $defaults, array $values): array
+    {
+        if (array_is_list($defaults)) {
+            return $values;
+        }
+
+        foreach ($defaults as $key => $default) {
+            if (! array_key_exists($key, $values)) {
+                $values[$key] = $default;
+            } elseif (is_array($default) && is_array($values[$key])) {
+                $values[$key] = self::fillMissingConfig($default, $values[$key]);
+            }
+        }
+
+        return $values;
+    }
+
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/request-log.php', 'request-log');
+        $this->mergeConfigDefaults(__DIR__.'/../config/request-log.php', 'request-log');
 
         $this->app->scoped(QueryCollector::class);
     }
@@ -52,6 +81,21 @@ final class RequestLogServiceProvider extends ServiceProvider
         if (Config::boolean('request-log.telescope.enabled')) {
             TelescopeBridge::register();
         }
+    }
+
+    private function mergeConfigDefaults(string $path, string $key): void
+    {
+        if ($this->app instanceof CachesConfiguration && $this->app->configurationIsCached()) {
+            return;
+        }
+
+        $defaults = require $path;
+        $values = $this->app->make('config')->get($key, []);
+
+        $this->app->make('config')->set($key, self::fillMissingConfig(
+            is_array($defaults) ? $defaults : [],
+            is_array($values) ? $values : [],
+        ));
     }
 
     private function registerPublishing(): void

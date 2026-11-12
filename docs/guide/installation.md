@@ -47,6 +47,8 @@ php artisan vendor:publish --tag=request-log-config
 
 Every option is documented in the [configuration reference](/reference/configuration).
 
+Options added by later versions apply to a published file too: keys it does not have get their default, at any depth. Lists you set (redaction keys, header lists) are kept exactly as written, so you can shorten or empty them.
+
 ## Grant access to the viewer
 
 Outside the `local` environment the viewer is closed until you define the gate:
