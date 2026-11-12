@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0-beta.5] - 2026-11-12
+
+### Fixed
+- A configuration cached before the package was installed has no
+  `request-log` key. The service provider skipped its defaults whenever the
+  configuration was cached, so the first boot after `composer install` failed
+  with `Configuration value for key [request-log.middleware.auto_register]
+  must be a boolean, NULL given` — `package:discover`, every `artisan`
+  command including `config:clear`, and every request — until the cache file
+  was deleted. The defaults are now used in that case.
+
 ## [0.1.0-beta.4] - 2026-11-12
 
 ### Security

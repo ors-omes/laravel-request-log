@@ -85,12 +85,16 @@ final class RequestLogServiceProvider extends ServiceProvider
 
     private function mergeConfigDefaults(string $path, string $key): void
     {
-        if ($this->app instanceof CachesConfiguration && $this->app->configurationIsCached()) {
+        $values = $this->app->make('config')->get($key);
+
+        // A cached configuration is complete, unless it was cached before the package was installed: then it has no
+        // request-log key, and every request (and the package:discover run by composer install) would fail until
+        // config:cache runs again. Fall back to the defaults for that case.
+        if (is_array($values) && $this->app instanceof CachesConfiguration && $this->app->configurationIsCached()) {
             return;
         }
 
         $defaults = require $path;
-        $values = $this->app->make('config')->get($key, []);
 
         $this->app->make('config')->set($key, self::fillMissingConfig(
             is_array($defaults) ? $defaults : [],
