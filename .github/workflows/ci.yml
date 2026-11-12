@@ -29,7 +29,7 @@ jobs:
           - { laravel: '^13.0', testbench: '^11.0', php: '8.4' }
           - { laravel: '^13.0', testbench: '^11.0', php: '8.5' }
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -63,7 +63,7 @@ jobs:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -76,7 +76,7 @@ jobs:
     name: Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
