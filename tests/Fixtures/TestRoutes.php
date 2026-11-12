@@ -22,6 +22,9 @@ final class TestRoutes
         $router->get('api/orders/fail', [OrderController::class, 'fail']);
         $router->post('api/login', LoginAction::class);
         $router->post('api/reset-password/{token}', static fn (): JsonResponse => new JsonResponse(['ok' => true]));
+        $router->post('api/invites/{token}', static fn (Invitation $token): JsonResponse => new JsonResponse(['ok' => true]))->middleware(SubstituteBindings::class);
+        $router->post('api/invitations/{invitation}', static fn (Invitation $invitation): JsonResponse => new JsonResponse(['ok' => true]))->middleware(SubstituteBindings::class);
+        $router->post('api/orders/by-token/{order:token}', static fn (Order $order): JsonResponse => new JsonResponse(['ok' => true]))->middleware(SubstituteBindings::class);
 
         $router->get('api/missing/{id}', static fn (): never => abort(404, 'Nothing here'));
         $router->post('api/validate', static function (Request $request): JsonResponse {
@@ -43,6 +46,8 @@ final class TestRoutes
             echo 'chunk';
         }, 200, ['Content-Type' => 'text/csv']));
         $router->post('api/redirect', static fn () => redirect('/done?token=secret-token-value&page=2'));
+        $router->post('api/oauth/authorize', static fn () => redirect('https://client.test/callback?code=AUTHCODE123&state=s1#access_token=abc'));
+        $router->post('api/metadata-redirect', static fn () => redirect('https://client.test/callback?code=AUTHCODE999'))->middleware('request-log:metadata');
         $router->post('api/query-error', static function (): JsonResponse {
             DB::select('select * from missing_table where email = ?', ['person@example.com']);
 

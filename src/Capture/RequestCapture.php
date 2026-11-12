@@ -9,6 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Config;
 use OrsOmes\RequestLog\Support\Redactor;
+use OrsOmes\RequestLog\Support\RouteInfo;
 use OrsOmes\RequestLog\Support\Truncator;
 
 final class RequestCapture
@@ -36,7 +37,8 @@ final class RequestCapture
     }
 
     /**
-     * Path with values of sensitive route parameters (e.g. {token}) redacted.
+     * Path with values of sensitive route parameters ({token},
+     * {invitation:token}) redacted.
      */
     public function path(Request $request): string
     {
@@ -45,7 +47,7 @@ final class RequestCapture
 
         if ($route instanceof Route) {
             foreach ($route->originalParameters() as $name => $value) {
-                if (! is_string($value) || $value === '' || ! $this->redactor->isSensitiveKey($name)) {
+                if (! is_string($value) || $value === '' || ! RouteInfo::isSensitiveParameter($route, (string) $name, $this->redactor->isSensitiveKey(...))) {
                     continue;
                 }
 

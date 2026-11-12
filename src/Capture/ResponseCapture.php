@@ -50,7 +50,9 @@ final class ResponseCapture
         }
 
         if ($response instanceof RedirectResponse) {
-            return ['kind' => 'redirect', 'body' => $this->redirectTarget($response->getTargetUrl()), 'bytes' => 0, 'truncated' => false];
+            $target = $metadataOnly ? '[omitted: redirect]' : $this->redirectTarget($response->getTargetUrl());
+
+            return ['kind' => 'redirect', 'body' => $target, 'bytes' => 0, 'truncated' => false];
         }
 
         $content = $response->getContent();
@@ -117,8 +119,16 @@ final class ResponseCapture
         return ['kind' => 'file', 'body' => sprintf('[file %s: %d bytes]', $name, $size), 'bytes' => $size, 'truncated' => false];
     }
 
+    /**
+     * Redacted like the Location header when "location" is a URL header,
+     * else only the query parameters with sensitive names.
+     */
     private function redirectTarget(string $url): string
     {
+        if ($this->redactor->isUrlHeader('location')) {
+            return $this->truncator->text($this->redactor->url($url), 4096);
+        }
+
         $query = parse_url($url, PHP_URL_QUERY);
 
         if (is_string($query) && $query !== '') {

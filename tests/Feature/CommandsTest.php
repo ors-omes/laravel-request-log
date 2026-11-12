@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use OrsOmes\RequestLog\Models\LoggedRequest;
 use OrsOmes\RequestLog\Recording\Reason;
@@ -73,6 +74,36 @@ it('audits stored records for values that look like secrets', function (): void 
         ->assertFailed();
 
     $this->artisan('request-log:audit', ['--since' => 'yesterday'])->assertFailed();
+});
+
+it('audits url headers, redirect targets and database messages that still hold values', function (): void {
+    storeLog([
+        'request_headers' => '{"referer":"https://app.test/list?page=[REDACTED]","accept":"application/json"}',
+        'response_kind' => 'redirect',
+        'response_body' => '[omitted: redirect]',
+        'exception_message' => 'SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: "[REDACTED]" (Connection: pgsql, SQL: select * from t where a = \'x\')',
+    ]);
+
+    $this->artisan('request-log:audit')->expectsOutputToContain('No suspicious values in 1 record(s).')->assertSuccessful();
+
+    storeLog([
+        'request_headers' => '{"referer":"https://app.test/reset-password/0f3a9c1d2e4b5a69788776655443322"}',
+        'response_headers' => '{"location":"https://client.test/callback?code=AUTHCODE123"}',
+        'response_kind' => 'redirect',
+        'response_body' => 'https://client.test/callback?code=AUTHCODE123',
+        'exception_message' => 'SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: "private789" (Connection: pgsql, SQL: select ?::integer)',
+    ]);
+
+    $this->withoutMockingConsoleOutput();
+
+    expect(Artisan::call('request-log:audit'))->toBe(1)
+        ->and(Artisan::output())
+        ->toContain('referer: https://ap')
+        ->toContain('location: https://cl')
+        ->toContain('sql-value')
+        ->toContain('4 finding(s) in 2 record(s)')
+        ->not->toContain('AUTHCODE123')
+        ->not->toContain('private789');
 });
 
 it('runs the migration and reports the table on the configured connection', function (): void {

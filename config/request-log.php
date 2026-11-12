@@ -136,9 +136,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | Keys are compared lower-cased with "-" turned into "_", at any depth, in
-    | request bodies, query strings, response bodies, headers and context.
-    | Matching values are replaced even when empty. Value patterns are
-    | applied to every string that is stored.
+    | request bodies, query strings, route parameters, response bodies,
+    | headers and context. Matching values are replaced even when empty.
+    | Value patterns are applied to every string that is stored.
+    |
+    | Headers in "url_headers" carry a URL whose parameters the package cannot
+    | know (redirect target, previous page, original URI behind a proxy). They
+    | keep their path and parameter names, but every query and fragment value
+    | is replaced, and so is any path segment that looks like a token (a run
+    | of 16+ mixed letters and digits that is not a ULID). The redirect target
+    | stored as the response body follows the "location" entry. Remove a
+    | header from the list to store it as sent.
     |
     */
 
@@ -184,6 +192,16 @@ return [
             'set-cookie',
             'authorization',
         ],
+        'url_headers' => [
+            'location',
+            'content-location',
+            'refresh',
+            'referer',
+            'x-forwarded-uri',
+            'x-original-uri',
+            'x-original-url',
+            'x-rewrite-url',
+        ],
         'value_patterns' => [
             '/\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}/',
             '/\bBearer\s+[A-Za-z0-9._~+\/=-]{8,}/i',
@@ -199,8 +217,13 @@ return [
     | Class, message and location are stored for every recorded exception.
     | The source snippet and trace (no arguments, paths relative to the base
     | path) are stored only when the status is >= "debug_min_status".
-    | QueryException messages are stored without bound values unless
-    | "query_bindings" is enabled.
+    |
+    | Database errors (QueryException, PDOException) keep the driver message
+    | and the SQL with its "?" placeholders, but not the values: PostgreSQL
+    | DETAIL/CONTEXT lines are dropped and quoted values such as
+    | `invalid input syntax for type integer: "…"` or `Duplicate entry '…'`
+    | are replaced. Identifiers (`relation "orders"`) stay. Enable
+    | "query_bindings" to store Laravel's full message with bound values.
     |
     */
 

@@ -8,7 +8,9 @@ use OrsOmes\RequestLog\Integrations\TelescopeBridge;
 use OrsOmes\RequestLog\Models\LoggedRequest;
 use OrsOmes\RequestLog\Models\LoggedRequestQuery;
 use OrsOmes\RequestLog\Recording\Reason;
+use OrsOmes\RequestLog\RequestLogServiceProvider;
 use OrsOmes\RequestLog\Support\Markdown;
+use OrsOmes\RequestLog\Support\Redactor;
 use OrsOmes\RequestLog\Support\Truncator;
 
 it('grows markdown fences beyond any backtick run in the content', function (): void {
@@ -61,4 +63,33 @@ it('registers the telescope bridge only when telescope is installed', function (
     TelescopeBridge::register();
 
     expect(class_exists('Laravel\Telescope\Telescope'))->toBeFalse();
+});
+
+it('redacts urls whose parameters it cannot know', function (string $url, string $expected): void {
+    expect((new Redactor())->url($url))->toBe($expected);
+})->with([
+    'query and fragment values' => [
+        'https://client.test/cb?code=abc&state=s1&flag#access_token=xyz&type=bearer',
+        'https://client.test/cb?code=[REDACTED]&state=[REDACTED]&flag#access_token=[REDACTED]&type=[REDACTED]',
+    ],
+    'token-like path segments' => [
+        'https://app.test/reset-password/0f3a9c1d2e4b5a69788776655443322?email=a@b.test',
+        'https://app.test/reset-password/[REDACTED]?email=[REDACTED]',
+    ],
+    'ids, slugs and numbers stay' => [
+        '/orders/01JCDV7Z9R2Q4P3M5N6B7C8D9E/lines/3f2504e0-4f89-11d3-9a0c-0305e82c3301/summer-sale-2026/12345678901234567890',
+        '/orders/01JCDV7Z9R2Q4P3M5N6B7C8D9E/lines/3f2504e0-4f89-11d3-9a0c-0305e82c3301/summer-sale-2026/12345678901234567890',
+    ],
+    'refresh header' => ['0; url=/next?token=abc', '0; url=/next?token=[REDACTED]'],
+    'anchor' => ['/docs#install', '/docs#install'],
+]);
+
+it('fills config keys a published file lacks without touching its lists', function (): void {
+    $defaults = ['redact' => ['keys' => ['*password*', '*token*'], 'url_headers' => ['location', 'referer'], 'replacement' => '[REDACTED]'], 'enabled' => true];
+    $published = ['redact' => ['keys' => ['*password*'], 'replacement' => '***'], 'enabled' => false];
+
+    expect(RequestLogServiceProvider::fillMissingConfig($defaults, $published))->toBe([
+        'redact' => ['keys' => ['*password*'], 'replacement' => '***', 'url_headers' => ['location', 'referer']],
+        'enabled' => false,
+    ])->and(RequestLogServiceProvider::fillMissingConfig($defaults, ['redact' => ['url_headers' => []]])['redact']['url_headers'])->toBe([]);
 });

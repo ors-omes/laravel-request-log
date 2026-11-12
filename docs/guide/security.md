@@ -34,7 +34,22 @@ Add your own with `redact.extra_keys`:
 
 Header names that match a key pattern (for example `x-access-token`) are redacted too.
 
-**Paths and URLs.** Values of sensitive route parameters (`/reset-password/{token}`) are replaced in `path` and `url`. Signed URL `signature` parameters are redacted as well.
+**URL headers.** Some headers carry a URL whose parameters the package cannot know: the redirect target, the previous page, the original URI behind a proxy. An OAuth `code`, a reset token in the path or a signed URL would otherwise be stored as sent. These headers keep their path and parameter names, but every query and fragment value is replaced, and so is any path segment that looks like a token (a run of 16 or more mixed letters and digits that is not a ULID):
+
+```text
+Referer:  https://app.test/reset-password/[REDACTED]?email=[REDACTED]
+Location: https://client.test/callback?code=[REDACTED]&state=[REDACTED]
+```
+
+The default list is `location`, `content-location`, `refresh`, `referer`, `x-forwarded-uri`, `x-original-uri`, `x-original-url` and `x-rewrite-url`. The redirect target stored as the response body follows the `location` entry. To keep a header as sent, remove it from the list:
+
+```php
+'redact' => [
+    'url_headers' => ['location', 'refresh'], // Referer and proxy headers stored as sent
+],
+```
+
+**Paths and URLs.** Values of sensitive route parameters are replaced in `path` and `url`: parameters named like a secret (`/reset-password/{token}`), and parameters looked up by a secret column (`/invitations/{invitation:token}`, or a model whose route key is `token`). The same parameters are never used as `subject`. Signed URL `signature` parameters are redacted as well.
 
 ![Password reset with its path token redacted](/screenshots/reset-password.png){.screenshot}
 
@@ -43,11 +58,12 @@ Header names that match a key pattern (for example `x-access-token`) are redacte
 - **Bodies that cannot be redacted by key** (XML, CSV, plain text, HTML): only the type and size are stored, unless you enable `capture.raw_text_bodies`.
 - **Uploaded file contents**: only the name, size and MIME type are stored.
 - **Streamed and file downloads**: they are never read.
-- **Bodies on `request-log:metadata` routes.**
+- **Bodies on `request-log:metadata` routes**, including the redirect target, which is stored as `[omitted: redirect]`.
 
 ## Exceptions
 
-- `QueryException` messages are stored without bound values. PostgreSQL `DETAIL:` lines and MySQL duplicate-entry values are removed.
+- Database errors (`QueryException`, `PDOException`) keep the driver message and the SQL with its `?` placeholders, but not the values. Drivers quote the offending value in the message itself (`invalid input syntax for type integer: "…"`, `Incorrect integer value: '…'`), so quoted text after `:`, `=`, `value` or `entry` is replaced, SQL Server's `duplicate key value is (…)` too, and PostgreSQL `DETAIL:` and `CONTEXT:` lines are dropped. Identifiers (`relation "orders"`, `for column 'qty'`) stay. To store Laravel's full message with bound values, set `exceptions.query_bindings` to `true`.
+- SQL written with literal values instead of bindings is stored as written.
 - Paths are stored relative to the project. Trace frames have no arguments.
 - Source snippets and traces are stored only when the status is ≥ `exceptions.debug_min_status` (500).
 
@@ -78,7 +94,7 @@ Header names that match a key pattern (for example `x-access-token`) are redacte
 1. Store logs on a dedicated connection with its own credentials and backups (`REQUEST_LOG_DB_CONNECTION`).
 2. Grant `viewRequestLogs` to platform operators only.
 3. Keep retention short (the defaults are 30 days, or 90 for 5xx).
-4. Run `php artisan request-log:audit --since=24h` after enabling the package and after changing routes or payload shapes.
+4. Run `php artisan request-log:audit --since=24h` after enabling the package, after upgrading it and after changing routes or payload shapes. Besides secret-looking values, it reports URL headers, redirect targets and database messages that the current redaction would still change (records written before a fix, or with a narrower configuration).
 5. Use `request-log:metadata` on routes whose bodies you never want to keep.
 
 ## Reporting a vulnerability

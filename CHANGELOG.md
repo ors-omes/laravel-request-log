@@ -4,6 +4,43 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.0-beta.4] - 2026-11-12
+
+### Security
+- URL headers (`location`, `content-location`, `refresh`, `referer`,
+  `x-forwarded-uri`, `x-original-uri`, `x-original-url`, `x-rewrite-url`)
+  were stored as sent, so a token in a redirect target or in the previous
+  page's URL reached the log although the response body redacted it. They
+  now keep their path and parameter names, with every query and fragment
+  value and any token-like path segment replaced. The redirect target in
+  the response body is redacted the same way, which also covers an OAuth
+  `code` (previously only sensitive parameter names were redacted).
+  Configure with `redact.url_headers`; remove a header to store it as sent.
+- Database drivers quote the offending value in the error message itself
+  (PostgreSQL `invalid input syntax for type integer: "…"`, MySQL
+  `Incorrect integer value: '…'`), which `exceptions.query_bindings = false`
+  did not remove. Quoted values are now replaced, PostgreSQL `CONTEXT:`
+  lines are dropped like `DETAIL:`, and `PDOException`s thrown outside the
+  query builder are scrubbed too. `query_bindings = true` still stores
+  Laravel's full message.
+- `request-log:metadata` routes stored the redirect target; it is now
+  `[omitted: redirect]`.
+- A `{token}` parameter bound to a model whose key is the token was stored
+  as `subject`, and `{invitation:token}` or a model whose route key is
+  `token` kept the raw token in `path` and `url`. Parameters named like a
+  secret, models whose primary key is named like one, and values looked up
+  by a secret column are now redacted from `path` and `url` and never used
+  as `subject` (`{order:token}` still gives `Order:<id>`).
+
+### Changed
+- Options added by later versions apply to a published config file: keys it
+  lacks get their default at any depth, while lists it sets are kept as
+  written. Before, a published file hid every new nested option.
+- `request-log:audit` reports `url-header` and `sql-value` findings: stored
+  values that the current redaction would still change.
+- Redirect targets now redact every query value, not only sensitive names
+  (`/done?token=[REDACTED]&page=[REDACTED]`).
+
 ## [0.1.0-beta.3] - 2026-11-12
 
 ### Removed

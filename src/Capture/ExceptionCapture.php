@@ -8,6 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Config;
 use OrsOmes\RequestLog\Support\Redactor;
 use OrsOmes\RequestLog\Support\Truncator;
+use PDOException;
 use SplFileObject;
 use Throwable;
 
@@ -85,8 +86,12 @@ final class ExceptionCapture
     {
         $message = $exception->getMessage();
 
-        if ($exception instanceof QueryException && ! Config::boolean('request-log.exceptions.query_bindings')) {
-            $message = $this->queryMessage($exception);
+        if (! Config::boolean('request-log.exceptions.query_bindings')) {
+            if ($exception instanceof QueryException) {
+                $message = $this->queryMessage($exception);
+            } elseif ($exception instanceof PDOException) {
+                $message = $this->redactor->driverMessage($message);
+            }
         }
 
         return $this->truncator->text(
@@ -96,17 +101,14 @@ final class ExceptionCapture
     }
 
     /**
-     * Driver message without bound values: PostgreSQL "DETAIL:" lines and
-     * MySQL "Duplicate entry '…'" values are removed, the SQL keeps its
-     * placeholders.
+     * Driver message without the values it quotes (see
+     * Redactor::driverMessage()), and the SQL with its placeholders.
      */
     private function queryMessage(QueryException $exception): string
     {
         $driverMessage = $exception->getPrevious()?->getMessage() ?? $exception->getMessage();
-        $driverMessage = preg_split('/\s*DETAIL:/', $driverMessage)[0] ?? $driverMessage;
-        $driverMessage = preg_replace("/Duplicate entry '.*?' for key/s", "Duplicate entry '".$this->redactor->replacement()."' for key", $driverMessage) ?? $driverMessage;
 
-        return trim($driverMessage).' (Connection: '.$exception->getConnectionName().', SQL: '.$exception->getSql().')';
+        return trim($this->redactor->driverMessage($driverMessage)).' (Connection: '.$exception->getConnectionName().', SQL: '.$exception->getSql().')';
     }
 
     private function snippet(Throwable $exception): ?string

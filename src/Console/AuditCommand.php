@@ -7,7 +7,9 @@ namespace OrsOmes\RequestLog\Console;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use OrsOmes\RequestLog\Models\LoggedRequest;
+use OrsOmes\RequestLog\Support\Redactor;
 
 /**
  * Scans stored records for values that look like secrets the redaction did
@@ -46,13 +48,14 @@ final class AuditCommand extends Command
         $limitOption = $this->option('limit');
         $limit = is_numeric($limitOption) ? max(1, (int) $limitOption) : 200;
         $replacement = Config::string('request-log.redact.replacement');
+        $redactor = new Redactor();
         $findings = [];
         $scanned = 0;
 
         LoggedRequest::query()
             ->createdSince($since)
-            ->select(['id', 'reference', ...self::FIELDS])
-            ->chunkById(200, function ($entries) use (&$findings, &$scanned, $limit, $replacement): bool {
+            ->select(['id', 'reference', 'response_kind', ...self::FIELDS])
+            ->chunkById(200, function ($entries) use (&$findings, &$scanned, $limit, $replacement, $redactor): bool {
                 foreach ($entries as $entry) {
                     $scanned++;
 
@@ -64,11 +67,17 @@ final class AuditCommand extends Command
 
                         foreach ($this->matches($value, $replacement) as $rule => $excerpt) {
                             $findings[] = [$entry->id, $entry->reference, $field, $rule, $excerpt];
-
-                            if (count($findings) >= $limit) {
-                                return false;
-                            }
                         }
+                    }
+
+                    foreach (self::unredacted($entry, $redactor) as [$field, $rule, $excerpt]) {
+                        $findings[] = [$entry->id, $entry->reference, $field, $rule, $excerpt];
+                    }
+
+                    if (count($findings) >= $limit) {
+                        $findings = array_slice($findings, 0, $limit);
+
+                        return false;
                     }
                 }
 
@@ -82,7 +91,7 @@ final class AuditCommand extends Command
         }
 
         $this->table(['id', 'reference', 'field', 'rule', 'excerpt'], $findings);
-        $this->warn(count($findings)." finding(s) in {$scanned} record(s). Add the keys to request-log.redact.extra_keys or a value pattern, then prune affected rows.");
+        $this->warn(count($findings)." finding(s) in {$scanned} record(s). Add the keys to request-log.redact.extra_keys or a value pattern (url-header and sql-value findings are already redacted in new records), then prune affected rows.");
 
         return self::FAILURE;
     }
@@ -92,6 +101,46 @@ final class AuditCommand extends Command
         $value = str_replace(["\r", "\n"], ' ', $value);
 
         return mb_strlen($value) <= 12 ? mb_substr($value, 0, 3).'…' : mb_substr($value, 0, 10).'…('.mb_strlen($value).' chars)';
+    }
+
+    /**
+     * Values the current redaction would still change: URL headers and
+     * redirect targets with query values or token-like path segments, and
+     * database error messages that quote values. Catches records written
+     * before a fix or with a narrower configuration.
+     *
+     * @return list<array{0: string, 1: string, 2: string}>
+     */
+    private static function unredacted(LoggedRequest $entry, Redactor $redactor): array
+    {
+        $found = [];
+
+        foreach (['request_headers', 'response_headers'] as $field) {
+            $stored = $entry->getAttribute($field);
+            $headers = is_string($stored) ? json_decode($stored, true) : null;
+
+            foreach (is_array($headers) ? $headers : [] as $name => $value) {
+                if (is_string($value) && $redactor->isUrlHeader((string) $name) && $redactor->url($value) !== $value) {
+                    $found[] = [$field, 'url-header', $name.': '.self::mask($value)];
+                }
+            }
+        }
+
+        $target = $entry->getAttribute('response_body');
+        if ($entry->getAttribute('response_kind') === 'redirect' && is_string($target) && $redactor->isUrlHeader('location') && $redactor->url($target) !== $target) {
+            $found[] = ['response_body', 'url-header', self::mask($target)];
+        }
+
+        $message = $entry->getAttribute('exception_message');
+        if (is_string($message) && str_starts_with($message, 'SQLSTATE[')) {
+            $driverMessage = Str::beforeLast($message, ' (Connection: ');
+
+            if ($redactor->driverMessage($driverMessage) !== $driverMessage) {
+                $found[] = ['exception_message', 'sql-value', self::mask($driverMessage)];
+            }
+        }
+
+        return $found;
     }
 
     private static function luhn(string $digits): bool

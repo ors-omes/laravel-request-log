@@ -12,10 +12,18 @@ final class Order extends Model
 
     protected $keyType = 'string';
 
+    /**
+     * Bound by key ({order}) or by another column ({order:token}), in which
+     * case the key is a fixed id.
+     */
     public function resolveRouteBinding($value, $field = null): self
     {
         $order = new self();
-        $order->setAttribute('id', $value);
+        $order->setAttribute('id', $field === null ? $value : 'ord_1');
+
+        if (is_string($field)) {
+            $order->setAttribute($field, $value);
+        }
 
         return $order;
     }
