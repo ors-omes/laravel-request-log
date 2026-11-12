@@ -69,6 +69,16 @@ class LoggedRequestQuery extends Builder
         return $this->where('status', (int) $status);
     }
 
+    public function createdSince(CarbonImmutable $time): self
+    {
+        return $this->where('created_at', '>=', LoggedRequest::formatTime($time));
+    }
+
+    public function createdBefore(CarbonImmutable $time): self
+    {
+        return $this->where('created_at', '<', LoggedRequest::formatTime($time));
+    }
+
     public function newestFirst(): self
     {
         return $this->orderByDesc('id');
@@ -102,16 +112,16 @@ class LoggedRequestQuery extends Builder
         $to = self::stringFilter($filters, 'to');
 
         if ($from !== null) {
-            $this->where('created_at', '>=', CarbonImmutable::parse($from));
+            $this->createdSince(CarbonImmutable::parse($from));
         }
 
         if ($to !== null) {
-            $this->where('created_at', '<=', CarbonImmutable::parse($to));
+            $this->where('created_at', '<=', LoggedRequest::formatTime(CarbonImmutable::parse($to)));
         }
 
         $range = self::stringFilter($filters, 'range');
         if ($from === null && $to === null && $range !== null && isset(self::RANGES[$range])) {
-            $this->where('created_at', '>=', CarbonImmutable::now()->subMinutes(self::RANGES[$range]));
+            $this->createdSince(CarbonImmutable::now()->subMinutes(self::RANGES[$range]));
         }
     }
 }

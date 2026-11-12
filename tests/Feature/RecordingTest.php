@@ -170,11 +170,10 @@ it('stores the start time in the application time zone', function (): void {
         $before = Carbon\CarbonImmutable::now()->subSecond();
         $this->postJson('/api/orders')->assertCreated();
 
-        $stored = LoggedRequest::query()->toBase()->value('created_at');
-
         expect(latestRequestLog()->created_at->greaterThanOrEqualTo($before))->toBeTrue()
             ->and(latestRequestLog()->created_at->lessThanOrEqualTo(Carbon\CarbonImmutable::now()->addSecond()))->toBeTrue()
-            ->and((string) $stored)->toStartWith($before->format('Y-m-d H'));
+            ->and(LoggedRequest::query()->filter(['range' => '15m'])->count())->toBe(1)
+            ->and(LoggedRequest::query()->createdBefore($before)->count())->toBe(0);
     } finally {
         date_default_timezone_set($previous);
     }

@@ -50,7 +50,7 @@ final class AuditCommand extends Command
         $scanned = 0;
 
         LoggedRequest::query()
-            ->where('created_at', '>=', $since)
+            ->createdSince($since)
             ->select(['id', 'reference', ...self::FIELDS])
             ->chunkById(200, function ($entries) use (&$findings, &$scanned, $limit, $replacement): bool {
                 foreach ($entries as $entry) {

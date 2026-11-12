@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OrsOmes\RequestLog\Models;
 
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
@@ -59,6 +60,12 @@ class LoggedRequest extends Model
 
     public $timestamps = false;
 
+    /**
+     * Times carry their UTC offset, so a timestamptz column stores the right
+     * instant whatever the database session time zone is.
+     */
+    protected $dateFormat = 'Y-m-d H:i:sP';
+
     protected $fillable = [
         'reference',
         'reason',
@@ -99,6 +106,14 @@ class LoggedRequest extends Model
         'context',
         'created_at',
     ];
+
+    /**
+     * Format a time for comparisons against created_at.
+     */
+    public static function formatTime(CarbonInterface $time): string
+    {
+        return $time->format('Y-m-d H:i:sP');
+    }
 
     public function getConnectionName(): ?string
     {

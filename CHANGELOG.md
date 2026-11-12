@@ -17,8 +17,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 - `created_at` was built in UTC and stored without an offset, so it read
-  back shifted by the application's UTC offset; it now uses the application
-  time zone.
+  back shifted by the application's UTC offset. It is now built in the
+  application time zone and written and compared with an explicit offset, so
+  PostgreSQL `timestamptz` stores the right instant whatever the session
+  time zone is.
 - Keys such as `operator_pin` / `pin_code` are redacted (`*_pin`, `pin_*`).
 
 ## [0.1.0-beta.1] - 2026-11-12

@@ -31,10 +31,10 @@ final class PruneCommand extends Command
 
         $now = CarbonImmutable::now();
         $deleted = $this->delete(static fn (LoggedRequestQuery $query): LoggedRequestQuery => $query
-            ->where('created_at', '<', $now->subDays($days))
+            ->createdBefore($now->subDays($days))
             ->where('status', '<', 500));
         $deleted += $this->delete(static fn (LoggedRequestQuery $query): LoggedRequestQuery => $query
-            ->where('created_at', '<', $now->subDays($errorDays)));
+            ->createdBefore($now->subDays($errorDays)));
 
         $this->info("Deleted {$deleted} request log record(s).");
 
