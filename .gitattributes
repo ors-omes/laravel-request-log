@@ -9,4 +9,6 @@
 /pint.json          export-ignore
 /CONTRIBUTING.md    export-ignore
 /testbench.yaml     export-ignore
-/site               export-ignore
+/docs               export-ignore
+/package.json       export-ignore
+/pnpm-lock.yaml     export-ignore

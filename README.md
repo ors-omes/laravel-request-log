@@ -2,9 +2,9 @@
 
 Structured, redacted and queryable HTTP request log for Laravel 12 and 13.
 
-**[Project page](https://ors-omes.github.io/laravel-request-log/) · [Live demo of the viewer](https://ors-omes.github.io/laravel-request-log/demo/en/index.html) · [Bản demo tiếng Việt](https://ors-omes.github.io/laravel-request-log/demo/vi/index.html)**
+**[Documentation](https://ors-omes.github.io/laravel-request-log/) · [Live demo of the viewer](https://ors-omes.github.io/laravel-request-log/demo/en/index.html) · [Bản demo tiếng Việt](https://ors-omes.github.io/laravel-request-log/demo/vi/index.html) · [llms.txt](https://ors-omes.github.io/laravel-request-log/llms.txt)**
 
-![Request log viewer](site/assets/list.png)
+![Request log viewer](docs/public/screenshots/list.png)
 
 By default it records **every POST, PUT, PATCH and DELETE** and **every request answered with 4xx or 5xx (including GET)**. For each one it stores:
 

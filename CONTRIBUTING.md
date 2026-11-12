@@ -21,4 +21,14 @@
    columns, config keys, the reference format or the API shape are breaking
    and need a CHANGELOG entry.
 
+Documentation lives in `docs/` (VitePress 2). Preview it with:
+
+```bash
+pnpm install
+pnpm docs:dev
+```
+
+`docs/public/demo` is a static copy of the viewer with sample data; regenerate it and
+`docs/public/screenshots` when the viewer changes.
+
 Security issues: see [SECURITY.md](SECURITY.md), do not open a public issue.
