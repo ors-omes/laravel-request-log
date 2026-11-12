@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Config;
 use OrsOmes\RequestLog\Capture\RequestCapture;
 use OrsOmes\RequestLog\Integrations\TelescopeBridge;
 use OrsOmes\RequestLog\Models\LoggedRequest;
@@ -83,6 +84,21 @@ it('redacts urls whose parameters it cannot know', function (string $url, string
     'refresh header' => ['0; url=/next?token=abc', '0; url=/next?token=[REDACTED]'],
     'anchor' => ['/docs#install', '/docs#install'],
 ]);
+
+it('uses the defaults when the cached configuration predates the package', function (): void {
+    $this->app->instance('config_loaded_from_cache', true);
+    Config::set('request-log', null);
+
+    (new RequestLogServiceProvider($this->app))->register();
+
+    expect(Config::boolean('request-log.middleware.auto_register'))->toBeTrue()
+        ->and(Config::get('request-log.storage.table'))->toBe('request_logs');
+
+    Config::set('request-log', ['storage' => ['table' => 'cached_logs']]);
+    (new RequestLogServiceProvider($this->app))->register();
+
+    expect(Config::get('request-log'))->toBe(['storage' => ['table' => 'cached_logs']]);
+});
 
 it('fills config keys a published file lacks without touching its lists', function (): void {
     $defaults = ['redact' => ['keys' => ['*password*', '*token*'], 'url_headers' => ['location', 'referer'], 'replacement' => '[REDACTED]'], 'enabled' => true];
